@@ -1,0 +1,158 @@
+/* Importing Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap');
+
+body {
+  font-family: 'Montserrat', sans-serif;
+  background-color: #f5f5f5;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.container {
+  width: 90%;
+  max-width: 1200px;
+  margin: 20px auto;
+  background: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+header {
+  background-color: #6200ea;
+  color: #fff;
+  padding: 20px;
+  text-align: center;
+}
+
+h1 {
+  margin: 0;
+  font-weight: 500;
+}
+
+.filters {
+  display: flex;
+  justify-content: space-between;
+  padding: 20px;
+  background: #f5f5f5;
+  border-bottom: 1px solid #ddd;
+  margin-bottom: 20px;
+}
+
+.input-field {
+  flex: 1;
+  margin-right: 10px;
+  position: relative;
+}
+
+.input-field input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+.input-field input:focus {
+  border-color: #6200ea;
+}
+
+.input-field label {
+  position: absolute;
+  top: -20px;
+  left: 10px;
+  font-size: 12px;
+  color: #6200ea;
+}
+
+.btn {
+  background-color: #6200ea;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.btn:hover {
+  background-color: #3700b3;
+}
+
+.inventory {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 20px;
+  justify-content: space-around;
+}
+
+.inventory-item {
+  background: #fff;
+  border: 1px solid #ddd;
+  margin: 10px;
+  padding: 20px;
+  width: calc(33% - 40px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  transition: transform 0.3s;
+  position: relative;
+}
+
+.inventory-item:hover {
+  transform: translateY(-5px);
+}
+
+.inventory-item img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+.inventory-item .color-band {
+  height: 5px;
+  width: 100%;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  border-radius: 0 0 8px 8px;
+}
+
+.no-image {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+/* Prefijos específicos de los navegadores */
+.btn {
+  -webkit-transition: background-color 0.3s;
+  -moz-transition: background-color 0.3s;
+  -o-transition: background-color 0.3s;
+  transition: background-color 0.3s;
+}
+
+.inventory-item {
+  -webkit-transition: transform 0.3s;
+  -moz-transition: transform 0.3s;
+  -o-transition: transform 0.3s;
+  transition: transform 0.3s;
+}
+
+@media (max-width: 768px) {
+  .inventory-item {
+    width: calc(50% - 40px);
+  }
+}
+
+@media (max-width: 480px) {
+  .inventory-item {
+    width: calc(100% - 40px);
+  }
+}

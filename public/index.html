@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inventario de Hilos</title>
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Inventario de Hilos</h1>
+    </header>
+    <div class="filters">
+      <div class="input-field">
+        <input type="text" id="yarnType" placeholder="Ingrese el tipo de hilo">
+        <label for="yarnType">Tipo de Hilo</label>
+      </div>
+      <button class="btn" onclick="filterYarnInventory()">Filtrar</button>
+    </div>
+    <div id="inventory" class="inventory"></div>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
