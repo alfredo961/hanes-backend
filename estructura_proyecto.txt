@@ -1,0 +1,26 @@
+project-root/
+│
+├── controllers/
+│   ├── orderController.js
+│   ├── printController.js
+│   └── yarnController.js
+│
+├── models/
+│   └── yarnModel.js
+│
+├── routes/
+│   ├── orderRoutes.js
+│   ├── printRoutes.js
+│   └── yarnRoutes.js
+│
+├── services/
+│   ├── orderService.js
+│   ├── printService.js
+│   └── yarnService.js
+│
+├── utils/
+│   ├── db.js
+│   └── printerUtil.js
+│
+├── index.js
+└── .env
