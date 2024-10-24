@@ -163,30 +163,28 @@ const insertPrintOrder = (teamId, callback) => {
   });
 };
 
-// Nueva ruta para imprimir un PDF
-const printers = ['HP LaserJet P1606dn', 'Canon E400 series Printer'];
+const printerName = 'Canon E400 series Printer';
 
 app.post('/printOrder', async (req, res) => {
   const { filePath, teamId } = req.body;
-
   if (!filePath || !teamId) {
     return res.status(400).send('Faltan parámetros filePath o teamId');
   }
-
   try {
-    const availablePrinter = await getAvailablePrinter(printers);
-
-    if (!availablePrinter) {
-      return res.status(500).send('No hay impresoras disponibles en este momento');
+    const isAvailable = await isPrinterAvailable(printerName);
+    if (!isAvailable) {
+      return res.status(500).send('La impresora no está disponible en este momento');
     }
-
     insertPrintOrder(teamId, (err, orderNumber) => {
       if (err) {
         console.error('Error al insertar la orden de impresión:', err);
         return res.status(500).send('Error al insertar la orden de impresión');
       }
-
-      printer.print(filePath, { printer: availablePrinter })
+      const printerOptions = {
+        printer: printerName,
+        monochrome: true
+      };
+      printer.print(filePath, printerOptions)
         .then(() => {
           res.json({ status: 'success', orderNumber });
         })
@@ -196,20 +194,10 @@ app.post('/printOrder', async (req, res) => {
         });
     });
   } catch (err) {
-    console.error('Error al verificar la disponibilidad de las impresoras:', err);
-    res.status(500).send('Error al verificar la disponibilidad de las impresoras');
+    console.error('Error al verificar la disponibilidad de la impresora:', err);
+    res.status(500).send('Error al verificar la disponibilidad de la impresora');
   }
 });
-
-async function getAvailablePrinter(printers) {
-  for (const printer of printers) {
-    const isAvailable = await isPrinterAvailable(printer);
-    if (isAvailable) {
-      return printer;
-    }
-  }
-  return null;
-}
 
 function isPrinterAvailable(printerName) {
   return new Promise((resolve, reject) => {
@@ -222,7 +210,7 @@ function isPrinterAvailable(printerName) {
         console.error(`Error en el comando: ${stderr}`);
         return reject(false);
       }
-      // Analiza la salida del comando para determinar el estado de la impresora
+      console.log(`Estado de la impresora ${printerName}: ${stdout}`);
       const status = stdout.includes('3'); // 3 generalmente significa "Idle" (lista para imprimir)
       resolve(status);
     });
