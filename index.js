@@ -3,6 +3,8 @@ const path = require('path');
 const cors = require('cors');
 const helmet = require('helmet');
 const db = require('./db');
+const printer = require('pdf-to-printer');
+const { exec } = require('child_process');
 
 const app = express();
 const PORT = 3001;
@@ -10,6 +12,7 @@ const PORT = 3001;
 // Middlewares
 app.use(cors());
 app.use(helmet());
+app.use(express.json()); // Middleware para analizar JSON
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Función para formatear los resultados de la consulta
@@ -123,6 +126,108 @@ app.get('/getYarnByTeam', (req, res) => {
     res.json(results);
   });
 });
+
+const insertPrintOrder = (teamId, callback) => {
+  const queryLastOrder = `
+    SELECT order_number, order_date
+    FROM print_orders
+    ORDER BY id DESC
+    LIMIT 1
+  `;
+
+  db.query(queryLastOrder, (err, results) => {
+    if (err) {
+      return callback(err);
+    }
+
+    let newOrderNumber = 1;
+    const today = new Date().toISOString().split('T')[0];
+
+    if (results.length > 0) {
+      const lastOrder = results[0];
+      if (lastOrder.order_date === today) {
+        newOrderNumber = lastOrder.order_number + 1;
+      }
+    }
+
+    const queryInsertOrder = `
+      INSERT INTO print_orders (order_number, team_id, order_date)
+      VALUES (?, ?, ?)
+    `;
+    db.query(queryInsertOrder, [newOrderNumber, teamId, today], (err, results) => {
+      if (err) {
+        return callback(err);
+      }
+      callback(null, newOrderNumber);
+    });
+  });
+};
+
+// Nueva ruta para imprimir un PDF
+const printers = ['HP LaserJet P1606dn', 'Canon E400 series Printer'];
+
+app.post('/printOrder', async (req, res) => {
+  const { filePath, teamId } = req.body;
+
+  if (!filePath || !teamId) {
+    return res.status(400).send('Faltan parámetros filePath o teamId');
+  }
+
+  try {
+    const availablePrinter = await getAvailablePrinter(printers);
+
+    if (!availablePrinter) {
+      return res.status(500).send('No hay impresoras disponibles en este momento');
+    }
+
+    insertPrintOrder(teamId, (err, orderNumber) => {
+      if (err) {
+        console.error('Error al insertar la orden de impresión:', err);
+        return res.status(500).send('Error al insertar la orden de impresión');
+      }
+
+      printer.print(filePath, { printer: availablePrinter })
+        .then(() => {
+          res.json({ status: 'success', orderNumber });
+        })
+        .catch((err) => {
+          console.error('Error al imprimir el PDF:', err);
+          res.status(500).send('Error al imprimir el PDF');
+        });
+    });
+  } catch (err) {
+    console.error('Error al verificar la disponibilidad de las impresoras:', err);
+    res.status(500).send('Error al verificar la disponibilidad de las impresoras');
+  }
+});
+
+async function getAvailablePrinter(printers) {
+  for (const printer of printers) {
+    const isAvailable = await isPrinterAvailable(printer);
+    if (isAvailable) {
+      return printer;
+    }
+  }
+  return null;
+}
+
+function isPrinterAvailable(printerName) {
+  return new Promise((resolve, reject) => {
+    exec(`wmic printer where name="${printerName}" get PrinterStatus`, (error, stdout, stderr) => {
+      if (error) {
+        console.error(`Error ejecutando el comando: ${error.message}`);
+        return reject(false);
+      }
+      if (stderr) {
+        console.error(`Error en el comando: ${stderr}`);
+        return reject(false);
+      }
+      // Analiza la salida del comando para determinar el estado de la impresora
+      const status = stdout.includes('3'); // 3 generalmente significa "Idle" (lista para imprimir)
+      resolve(status);
+    });
+  });
+}
 
 // Iniciar servidor
 app.listen(PORT, () => {
