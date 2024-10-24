@@ -5,9 +5,20 @@ const helmet = require('helmet');
 const db = require('./db');
 const printer = require('pdf-to-printer');
 const { exec } = require('child_process');
-
+const multer = require('multer');
 const app = express();
 const PORT = 3001;
+
+// Configurar multer
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/');
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.originalname);
+  }
+});
+const upload = multer({ storage: storage });
 
 // Middlewares
 app.use(cors());
@@ -50,12 +61,10 @@ const getYarnInventoryWithImages = (filters = {}, callback) => {
     WHERE 1=1
   `;
   const queryParams = [];
-
   Object.keys(filters).forEach((key) => {
     query += ` AND yi.${key} = ?`;
     queryParams.push(filters[key]);
   });
-
   db.query(query, queryParams, (err, results) => {
     if (err) {
       return callback(err);
@@ -80,7 +89,6 @@ app.get('/getYarnByType', (req, res) => {
   if (!yarn_type) {
     return res.status(400).send('Falta el parámetro yarn_type');
   }
-
   getYarnInventoryWithImages({ yarn_type }, (err, results) => {
     if (err) {
       console.error('Error en la consulta a la base de datos:', err);
@@ -92,7 +100,6 @@ app.get('/getYarnByType', (req, res) => {
 
 app.get('/filterYarnInventory', (req, res) => {
   const filters = req.query;
-
   getYarnInventoryWithImages(filters, (err, results) => {
     if (err) {
       console.error('Error en la consulta a la base de datos:', err);
@@ -117,7 +124,6 @@ app.get('/getYarnByTeam', (req, res) => {
   if (!team_id) {
     return res.status(400).send('Falta el parámetro team_id');
   }
-
   getYarnInventoryWithImages({ team_id }, (err, results) => {
     if (err) {
       console.error('Error en la consulta a la base de datos:', err);
@@ -134,22 +140,18 @@ const insertPrintOrder = (teamId, callback) => {
     ORDER BY id DESC
     LIMIT 1
   `;
-
   db.query(queryLastOrder, (err, results) => {
     if (err) {
       return callback(err);
     }
-
     let newOrderNumber = 1;
     const today = new Date().toISOString().split('T')[0];
-
     if (results.length > 0) {
       const lastOrder = results[0];
       if (lastOrder.order_date === today) {
         newOrderNumber = lastOrder.order_number + 1;
       }
     }
-
     const queryInsertOrder = `
       INSERT INTO print_orders (order_number, team_id, order_date)
       VALUES (?, ?, ?)
@@ -165,16 +167,20 @@ const insertPrintOrder = (teamId, callback) => {
 
 const printerName = 'Canon E400 series Printer';
 
-app.post('/printOrder', async (req, res) => {
-  const { filePath, teamId } = req.body;
+app.post('/printOrder', upload.single('file'), async (req, res) => {
+  const { teamId } = req.body;
+  const filePath = req.file.path;
+
   if (!filePath || !teamId) {
     return res.status(400).send('Faltan parámetros filePath o teamId');
   }
+
   try {
     const isAvailable = await isPrinterAvailable(printerName);
     if (!isAvailable) {
       return res.status(500).send('La impresora no está disponible en este momento');
     }
+
     insertPrintOrder(teamId, (err, orderNumber) => {
       if (err) {
         console.error('Error al insertar la orden de impresión:', err);
