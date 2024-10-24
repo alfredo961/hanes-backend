@@ -137,6 +137,7 @@ const insertPrintOrder = (teamId, callback) => {
   const queryLastOrder = `
     SELECT order_number, order_date
     FROM print_orders
+    WHERE order_date = CURDATE()
     ORDER BY id DESC
     LIMIT 1
   `;
@@ -145,18 +146,15 @@ const insertPrintOrder = (teamId, callback) => {
       return callback(err);
     }
     let newOrderNumber = 1;
-    const today = new Date().toISOString().split('T')[0];
     if (results.length > 0) {
       const lastOrder = results[0];
-      if (lastOrder.order_date === today) {
-        newOrderNumber = lastOrder.order_number + 1;
-      }
+      newOrderNumber = lastOrder.order_number + 1;
     }
     const queryInsertOrder = `
       INSERT INTO print_orders (order_number, team_id, order_date)
-      VALUES (?, ?, ?)
+      VALUES (?, ?, NOW())
     `;
-    db.query(queryInsertOrder, [newOrderNumber, teamId, today], (err, results) => {
+    db.query(queryInsertOrder, [newOrderNumber, teamId], (err, results) => {
       if (err) {
         return callback(err);
       }
