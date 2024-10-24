@@ -221,6 +221,34 @@ function isPrinterAvailable(printerName) {
   });
 }
 
+app.get('/getOrderNumber', (req, res) => {
+  const queryLastOrder = `
+    SELECT order_number, order_date
+    FROM print_orders
+    ORDER BY id DESC
+    LIMIT 1
+  `;
+  db.query(queryLastOrder, (err, results) => {
+    if (err) {
+      console.error('Error en la consulta a la base de datos:', err);
+      return res.status(500).send('Error en la consulta a la base de datos');
+    }
+    let newOrderNumber = 1;
+    const today = new Date().toISOString().split('T')[0];
+    if (results.length > 0) {
+      const lastOrder = results[0];
+      const lastOrderDate = new Date(lastOrder.order_date).toISOString().split('T')[0];
+      console.log('Última orden:', lastOrder);
+      console.log('Comparando fechas:', lastOrderDate, today);
+      if (lastOrderDate === today) {
+        newOrderNumber = lastOrder.order_number + 1;
+      }
+    }
+    console.log('Nuevo número de orden:', newOrderNumber);
+    res.json({ orderNumber: newOrderNumber });
+  });
+});
+
 // Iniciar servidor
 app.listen(PORT, () => {
   console.log(`Servidor escuchando en el puerto ${PORT}`);
