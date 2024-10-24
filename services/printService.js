@@ -1,7 +1,8 @@
 const db = require('../utils/db');
 const printer = require('pdf-to-printer');
 
-exports.printerName = 'Canon E400 series Printer';
+//exports.printerName = 'Canon E400 series Printer';
+exports.printerName = 'HP LaserJet Professional P1606dn';
 
 exports.insertPrintOrder = (teamId, callback) => {
   const queryLastOrder = `
